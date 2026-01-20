@@ -1,0 +1,206 @@
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sorting Algorithm Visualizer</title>
+    <!-- Font Imports -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@400;700&family=Playfair+Display:wght@700;900&family=Quicksand:wght@500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --color-primary: #6366F1;
+        --color-secondary: #10B981;
+        --color-accent: #F87171;
+        --color-swap: #F59E0B;
+        --color-background: #FFFFFF;
+        --color-surface: #F9FAFB; /* gray-50 */
+        --color-text-primary: #1F2937; /* gray-800 */
+        --color-text-secondary: #6B7280; /* gray-500 */
+        --font-main: 'Inter', sans-serif;
+      }
+      .dark {
+        --color-primary: #6366F1;
+        --color-secondary: #10B981;
+        --color-accent: #F87171;
+        --color-swap: #F59E0B;
+        --color-background: #111827; /* gray-900 */
+        --color-surface: #1F2937; /* gray-800 */
+        --color-text-primary: #F9FAFB; /* gray-50 */
+        --color-text-secondary: #9CA3AF; /* gray-400 */
+      }
+      .penguin {
+        --color-primary: #006994; /* Sea Blue */
+        --color-secondary: #FFA500; /* Orange */
+        --color-accent: #00BFFF; /* Deep Sky Blue */
+        --color-swap: #FFD700; /* Gold */
+        --color-background: #EAF0F6; /* Cool light gray */
+        --color-surface: #D9E2EC; /* Slightly darker cool gray */
+        --color-text-primary: #2F4F4F; /* Dark Slate Gray */
+        --color-text-secondary: #708090; /* Slate Gray */
+      }
+
+      @keyframes shake {
+        0% { transform: translateX(0); }
+        25% { transform: translateX(-3px) rotate(-1deg); }
+        50% { transform: translateX(3px) rotate(1deg); }
+        75% { transform: translateX(-3px) rotate(-1deg); }
+        100% { transform: translateX(0); }
+      }
+
+      @keyframes wobble {
+        0% { transform: rotate(0deg) scale(1); }
+        20% { transform: rotate(-6deg) scale(1.12); }
+        40% { transform: rotate(6deg) scale(1.08); }
+        60% { transform: rotate(-4deg) scale(1.15); }
+        80% { transform: rotate(4deg) scale(1.1); }
+        100% { transform: rotate(0deg) scale(1); }
+      }
+
+      @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+
+      @keyframes reset-pulse {
+        0% { transform: translateY(0) scale(1); filter: brightness(1); }
+        30% { transform: translateY(-4px) scale(1.05); filter: brightness(1.4); }
+        100% { transform: translateY(0) scale(1); filter: brightness(1); }
+      }
+
+      .animate-shake {
+        animation: shake 0.1s ease-in-out infinite;
+      }
+
+      .animate-wobble {
+        animation: wobble 0.4s ease-in-out infinite;
+      }
+
+      .animate-reset {
+        animation: reset-pulse 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      }
+
+      .shimmer-container {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .shimmer-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 0.4) 50%,
+          rgba(255, 255, 255, 0) 100%
+        );
+        animation: shimmer 0.8s infinite;
+      }
+
+      /* Enhanced Range Input Styling */
+      input[type=range] {
+        -webkit-appearance: none;
+        background: transparent;
+      }
+
+      input[type=range]:focus {
+        outline: none;
+      }
+
+      input[type=range]::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 6px;
+        cursor: pointer;
+        background: rgba(156, 163, 175, 0.4);
+        border-radius: 4px;
+        transition: background 0.2s;
+      }
+
+      .dark input[type=range]::-webkit-slider-runnable-track {
+        background: rgba(156, 163, 175, 0.3);
+      }
+
+      input[type=range]:hover::-webkit-slider-runnable-track {
+        background: rgba(156, 163, 175, 0.6);
+      }
+
+      input[type=range]::-webkit-slider-thumb {
+        height: 16px;
+        width: 16px;
+        border-radius: 50%;
+        background: var(--color-primary);
+        cursor: pointer;
+        -webkit-appearance: none;
+        margin-top: -5px; /* Centers thumb on the 6px track */
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      }
+
+      input[type=range]::-moz-range-track {
+        width: 100%;
+        height: 6px;
+        cursor: pointer;
+        background: rgba(156, 163, 175, 0.4);
+        border-radius: 4px;
+      }
+
+      input[type=range]::-moz-range-thumb {
+        height: 16px;
+        width: 16px;
+        border-radius: 50%;
+        background: var(--color-primary);
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      }
+
+      body {
+        font-family: var(--font-main);
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              main: ['var(--font-main)', 'sans-serif'],
+            },
+            colors: {
+              primary: 'var(--color-primary)',
+              secondary: 'var(--color-secondary)',
+              accent: 'var(--color-accent)',
+              swap: 'var(--color-swap)',
+              background: 'var(--color-background)',
+              surface: 'var(--color-surface)',
+              textPrimary: 'var(--color-text-primary)',
+              textSecondary: 'var(--color-text-secondary)',
+            },
+            ringOffsetColor: {
+              'background': 'var(--color-background)',
+            }
+          },
+        },
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+  }
+}
+</script>
+</head>
+  <body class="bg-background text-textPrimary transition-colors duration-300 font-main">
+    <div id="root"></div>
+  </body>
+</html>
