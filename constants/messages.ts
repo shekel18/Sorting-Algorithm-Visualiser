@@ -57,6 +57,12 @@ const messages: Record<SortingAlgorithm, string[]> = {
     "The universe smiled upon us today.",
     "A triumph of chaos theory!",
   ],
+  [SortingAlgorithm.Timsort]: [
+    "Python's pride and joy. Smooth, stable, and ready for anything.",
+    "The hybrid approach pays off again.",
+    "Runs detected, merges completed. Efficiency achieved.",
+    "Production-grade sorting is complete!",
+  ],
 };
 
 export const getRandomMessage = (algorithm: SortingAlgorithm): string => {

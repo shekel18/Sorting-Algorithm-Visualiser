@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { PRIMARY_COLOR, SECONDARY_COLOR, ACCENT_COLOR, SWAP_COLOR, PENGUIN_ICON_URI } from '../constants';
-import { SortingAlgorithm } from '../types';
+import { SortingAlgorithm, SortStats } from '../types';
 
 interface VisualizerProps {
   array: number[];
@@ -11,10 +11,18 @@ interface VisualizerProps {
   isResetting?: boolean;
   theme: 'light' | 'dark' | 'penguin';
   algorithm: SortingAlgorithm;
+  debugVars?: {i?: number, j?: number, pivot?: number, step: number};
+  stats: SortStats;
+  label: string;
+  isContender?: boolean;
 }
 
-const Visualizer: React.FC<VisualizerProps> = ({ array, activeIndices, swapIndices, sortedIndices, isResetting, theme, algorithm }) => {
+const Visualizer: React.FC<VisualizerProps> = ({ 
+  array, activeIndices, swapIndices, sortedIndices, 
+  isResetting, theme, algorithm, debugVars, stats, label, isContender 
+}) => {
   const isBogo = algorithm === SortingAlgorithm.BogoSort;
+  const isFinished = sortedIndices.length === array.length && array.length > 0;
 
   const maxValue = useMemo(() => {
     return array.length > 0 ? Math.max(...array) : 1;
@@ -32,87 +40,66 @@ const Visualizer: React.FC<VisualizerProps> = ({ array, activeIndices, swapIndic
     return PRIMARY_COLOR;
   };
 
-  const arrayContainerWidth = 92; // vw, slightly wider on mobile
-  const gapBetweenBars = array.length > 50 ? 0.05 : 0.1; // vw
-  const totalGaps = (array.length - 1) * gapBetweenBars;
-  const barWidth = (arrayContainerWidth - totalGaps) / array.length;
-  
   const penguinMetrics = useMemo(() => {
     const size = array.length > 75 ? 12 : array.length > 40 ? 20 : 36;
     const margin = array.length > 75 ? 1 : array.length > 40 ? 3 : 6;
-    const shadowSize = array.length > 75 ? 3 : array.length > 40 ? 6 : 10;
-    return { size, margin, shadowSize };
+    return { size, margin };
   }, [array.length]);
 
-  const verticalScaleFactor = theme === 'penguin' ? 82 : 92;
+  const verticalScaleFactor = theme === 'penguin' ? 75 : 85;
 
   return (
-    <div className="w-full h-[55vh] sm:h-[65vh] flex justify-center items-end px-1" style={{gap: `${gapBetweenBars}vw`}}>
-      {array.map((value, idx) => {
-        const isActive = activeIndices.includes(idx);
-        const isSwapping = swapIndices.includes(idx);
-        const isOutOfOrder = isBogo && !sortedIndices.includes(idx) && (
-          (idx > 0 && array[idx] < array[idx - 1]) || 
-          (idx < array.length - 1 && array[idx] > array[idx + 1])
-        );
-        
-        const barHeightPercent = (value / maxValue) * verticalScaleFactor;
-        
-        let animationClass = '';
-        if (isResetting) animationClass = 'animate-reset z-10';
-        else if (isActive) animationClass = (isBogo ? 'animate-shake' : '') + ' z-30';
-        else if (isSwapping) animationClass = 'scale-110 shadow-2xl z-50';
-        else if (isOutOfOrder) animationClass = 'animate-wobble z-20';
-
-        // Calculate staggered delay for reset wave
-        const staggerDelay = isResetting ? `${idx * 4}ms` : '0ms';
-
-        return (
-          <div
-            key={idx}
-            className={`bar-wrapper relative transition-all duration-150 ease-out ${animationClass}`}
-            style={{
-              height: `${barHeightPercent}%`,
-              width: `${barWidth}vw`,
-              transitionProperty: isBogo ? 'transform, box-shadow' : 'height, transform, box-shadow',
-              animationDelay: staggerDelay
-            }}
-          >
-            {theme === 'penguin' && (
-              <img
-                src={PENGUIN_ICON_URI}
-                alt="penguin"
-                className={`absolute bottom-full left-1/2 -translate-x-1/2 z-10 ${(isOutOfOrder || isSwapping) ? 'brightness-125 contrast-150' : ''}`}
-                style={{
-                  width: `${penguinMetrics.size}px`,
-                  height: `${penguinMetrics.size}px`,
-                  marginBottom: `${penguinMetrics.margin}px`,
-                  filter: (isOutOfOrder || isSwapping) 
-                    ? `drop-shadow(0 0 ${penguinMetrics.shadowSize}px rgba(255, 69, 0, 0.8))` 
-                    : 'none',
-                  transition: 'all 0.2s ease',
-                  animationDelay: staggerDelay
-                }}
-              />
-            )}
-            <div
-              className={`array-bar w-full h-full shimmer-container ${
-                isOutOfOrder 
-                  ? 'ring-1 sm:ring-2 ring-accent ring-opacity-100 shadow-[0_0_15px_rgba(239,68,68,0.5)]' 
-                  : isSwapping ? 'ring-1 ring-white/40' : ''
-              }`}
-              style={{
-                backgroundColor: getBarColor(idx),
-                transition: 'background-color 0.1s ease-in-out, transform 0.2s ease-in-out',
-                borderRadius: (isBogo && (isOutOfOrder || isSwapping)) ? '2px 2px 0 0' : '0'
-              }}
-            >
-              {(isBogo && isSwapping) && <div className="shimmer-overlay opacity-70" />}
-              {(isBogo && isActive) && <div className="shimmer-overlay opacity-30" />}
+    <div className={`w-full h-full min-h-[400px] flex flex-col items-center justify-end relative pb-8 rounded-2xl border transition-all duration-300 ${isContender ? 'bg-black/5 border-primary/20' : 'bg-transparent border-transparent'}`}>
+      
+      <div className="absolute top-4 left-4 right-4 flex flex-col gap-2 z-40">
+        <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${isContender ? 'bg-primary/20 text-primary' : 'bg-secondary/20 text-secondary'}`}>
+                    {label}
+                </span>
+                <h3 className="font-bold text-sm sm:text-base text-textPrimary truncate">{algorithm}</h3>
             </div>
+            {isFinished && (
+                <div className="flex items-center gap-1 animate-bounce text-secondary font-black text-[10px] uppercase">
+                    🏆 Winner
+                </div>
+            )}
+        </div>
+
+        <div className="flex gap-4 p-2 bg-surface/50 backdrop-blur-md rounded-lg border border-primary/10 shadow-sm w-fit text-[10px] font-mono font-black">
+            <div className="flex flex-col">
+                <span className="text-textSecondary uppercase tracking-tighter">Compares</span>
+                <span className="text-primary">{stats.comparisons.toLocaleString()}</span>
+            </div>
+            <div className="flex flex-col border-l border-textSecondary/10 pl-4">
+                <span className="text-textSecondary uppercase tracking-tighter">Moves</span>
+                <span className="text-accent">{(stats.swaps + stats.overwrites).toLocaleString()}</span>
+            </div>
+        </div>
+      </div>
+      
+      {!isContender && debugVars && debugVars.step > 0 && (
+          <div className="absolute bottom-16 right-4 p-2 bg-surface/80 backdrop-blur-md rounded-xl border border-primary/20 shadow-xl z-[45] font-mono text-[10px] min-w-[120px]">
+              <div className="text-emerald-500 font-black">i: {debugVars.i}</div>
+              <div className="text-rose-500 font-black">j: {debugVars.j}</div>
           </div>
-        );
-      })}
+      )}
+
+      <div className="w-full h-full flex justify-center items-end px-4 gap-px">
+        {array.map((value, idx) => {
+            const barHeightPercent = (value / maxValue) * verticalScaleFactor;
+            const barWidth = 100 / array.length;
+            
+            return (
+            <div key={idx} className="bar-wrapper relative" style={{ height: `${barHeightPercent}%`, width: `${barWidth}%`, maxWidth: '40px' }}>
+                {theme === 'penguin' && (
+                <img src={PENGUIN_ICON_URI} alt="p" className="absolute bottom-full left-1/2 -translate-x-1/2 z-10" style={{ width: `${penguinMetrics.size}px`, height: `${penguinMetrics.size}px`, marginBottom: `${penguinMetrics.margin}px` }} />
+                )}
+                <div className="array-bar w-full h-full transition-colors duration-150" style={{ backgroundColor: getBarColor(idx), borderRadius: '2px 2px 0 0' }} />
+            </div>
+            );
+        })}
+      </div>
     </div>
   );
 };

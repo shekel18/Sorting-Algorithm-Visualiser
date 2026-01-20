@@ -64,6 +64,7 @@ export const PENGUIN_ICON_URI = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0c
 
 export const ALGORITHMS: { value: SortingAlgorithm; label: string }[] = [
   // Comparison Sorts
+  { value: SortingAlgorithm.Timsort, label: 'Timsort (Python Default)' },
   { value: SortingAlgorithm.MergeSort, label: 'Merge Sort' },
   { value: SortingAlgorithm.QuickSort, label: 'Quick Sort' },
   { value: SortingAlgorithm.HeapSort, label: 'Heap Sort' },

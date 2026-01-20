@@ -7,6 +7,7 @@ interface AlgorithmInfoProps {
   algorithm: SortingAlgorithm;
   onClose?: () => void;
   onSelectAlgorithm?: (alg: SortingAlgorithm) => void;
+  highlightedLine?: number;
 }
 
 const COMPLEXITY_WEIGHTS: Record<string, number> = {
@@ -40,7 +41,7 @@ const highlightPython = (code: string) => {
   });
 };
 
-const AlgorithmInfo: React.FC<AlgorithmInfoProps> = ({ algorithm, onClose, onSelectAlgorithm }) => {
+const AlgorithmInfo: React.FC<AlgorithmInfoProps> = ({ algorithm, onClose, onSelectAlgorithm, highlightedLine = -1 }) => {
   const [view, setView] = useState<'details' | 'compare'>('details');
   const [copying, setCopying] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 380, height: 580 });
@@ -89,213 +90,63 @@ const AlgorithmInfo: React.FC<AlgorithmInfoProps> = ({ algorithm, onClose, onSel
 
   return (
     <>
-      <div 
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 sm:hidden animate-in fade-in duration-300" 
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 sm:hidden animate-in fade-in duration-300" onClick={onClose} />
       
-      <div 
-        className={`fixed inset-x-4 inset-y-20 sm:top-32 sm:right-6 sm:inset-x-auto sm:inset-y-auto p-4 sm:p-5 rounded-2xl bg-surface/98 backdrop-blur-2xl border border-primary/40 shadow-2xl z-50 flex flex-col gap-3 sm:gap-4 transition-all duration-300 ${isResizing ? 'transition-none border-primary/80' : ''}`}
-        style={{ 
-          width: window.innerWidth < 640 ? 'calc(100% - 32px)' : `${dimensions.width}px`, 
-          height: window.innerWidth < 640 ? 'calc(100% - 160px)' : `${dimensions.height}px` 
-        }}
-      >
-        <button 
-          onClick={onClose}
-          className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-surface border border-primary shadow-lg flex items-center justify-center text-primary z-[60] sm:hidden"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-
-        <div 
-          onMouseDown={startResizing}
-          className="absolute bottom-0 left-0 w-8 h-8 cursor-sw-resize hidden sm:flex items-center justify-center group z-50"
-        >
-          <div className="w-2 h-2 bg-primary/40 rounded-full transition-all group-hover:scale-150 group-hover:bg-primary shadow-sm" />
-        </div>
-
-        {/* Tab Header */}
+      <div className={`fixed inset-x-4 inset-y-20 sm:top-32 sm:right-6 sm:inset-x-auto sm:inset-y-auto p-4 sm:p-5 rounded-2xl bg-surface/98 backdrop-blur-2xl border border-primary/40 shadow-2xl z-50 flex flex-col gap-3 sm:gap-4 transition-all duration-300 ${isResizing ? 'transition-none border-primary/80' : ''}`}
+        style={{ width: window.innerWidth < 640 ? 'calc(100% - 32px)' : `${dimensions.width}px`, height: window.innerWidth < 640 ? 'calc(100% - 160px)' : `${dimensions.height}px` }}>
+        
         <div className="flex gap-1 p-1 bg-background/50 rounded-xl border border-textSecondary/10 shrink-0">
-          <button
-            onClick={() => setView('details')}
-            className={`flex-1 py-1.5 rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all ${
-              view === 'details' ? 'bg-primary text-white shadow-lg' : 'text-textSecondary hover:text-textPrimary'
-            }`}
-          >
-            Algorithm Info
+          <button onClick={() => setView('details')} className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${view === 'details' ? 'bg-primary text-white' : 'text-textSecondary'}`}>
+            Implementation
           </button>
-          <button
-            onClick={() => setView('compare')}
-            className={`flex-1 py-1.5 rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all ${
-              view === 'compare' ? 'bg-primary text-white shadow-lg' : 'text-textSecondary hover:text-textPrimary'
-            }`}
-          >
-            Performance Compare
+          <button onClick={() => setView('compare')} className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${view === 'compare' ? 'bg-primary text-white' : 'text-textSecondary'}`}>
+            Performance
           </button>
         </div>
 
         {view === 'details' ? (
-          <div className="flex flex-col gap-3 sm:gap-4 flex-grow overflow-hidden animate-in fade-in slide-in-from-left-2 duration-300">
-            <div className="flex flex-col gap-1 shrink-0">
-              <div className="flex items-center justify-between">
-                <h3 className="font-black text-primary text-base sm:text-xl truncate pr-2" title={algorithm}>
-                  {algorithm}
-                </h3>
-                <span className={`text-[9px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded border uppercase tracking-tighter shrink-0 ${getComplexityColor(details.complexity)}`}>
-                  {details.complexity}
-                </span>
-              </div>
-              <p className="text-[11px] sm:text-xs text-textSecondary leading-relaxed line-clamp-2">
-                {details.description}
-              </p>
+          <div className="flex flex-col gap-3 flex-grow overflow-hidden animate-in fade-in slide-in-from-left-2 duration-300">
+            <div className="flex items-center justify-between">
+              <h3 className="font-black text-primary text-base truncate">{algorithm}</h3>
+              <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${getComplexityColor(details.complexity)}`}>{details.complexity}</span>
             </div>
-
-            <div className="pt-2 sm:pt-3 border-t border-textSecondary/10 shrink-0">
-              <div className="flex justify-between items-center mb-1.5 sm:mb-2">
-                <h4 className="text-[9px] sm:text-[10px] font-black text-textPrimary/60 uppercase tracking-widest">Efficiency Chart</h4>
+            
+            <div className="grow overflow-hidden flex flex-col gap-2">
+              <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black text-textSecondary uppercase tracking-widest">Live Trace</span>
+                  <button onClick={handleCopy} className="text-[8px] font-bold px-2 py-1 bg-primary/10 text-primary rounded">{copying ? 'Copied!' : 'Copy Code'}</button>
               </div>
-              <div className="relative h-16 sm:h-20 px-1 bg-background/50 dark:bg-black/30 rounded-xl flex items-end justify-between gap-1 border border-textSecondary/5">
-                {allAlgorithms.map(([name, data]) => {
-                  const isCurrent = name === algorithm;
-                  const weight = COMPLEXITY_WEIGHTS[data.complexity] || 50;
-                  const height = Math.max(weight, 15);
-                  return (
-                    <div key={name} className="group relative flex-1 flex flex-col items-center h-full justify-end">
-                      <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col z-[60] pointer-events-none w-max max-w-[200px]">
-                        <div className="bg-slate-900 text-white p-2 sm:p-3 rounded-xl shadow-2xl border border-white/10 text-[9px] sm:text-[10px] leading-tight space-y-2">
-                          <div className="font-black border-b border-white/10 pb-1.5 mb-1 text-xs text-primary flex items-center justify-between gap-2">
-                            <span>{name}</span>
-                          </div>
-                          <div className="space-y-1">
-                            <div className="flex justify-between gap-4">
-                              <span className="text-white/50 uppercase text-[8px]">Average</span>
-                              <span className="font-mono font-black text-primary">{data.complexity}</span>
-                            </div>
-                            <div className="flex justify-between gap-4">
-                              <span className="text-white/50 uppercase text-[8px]">Worst</span>
-                              <span className="font-mono font-black text-accent">{data.worstCase}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div 
-                        className={`w-full rounded-t-sm sm:rounded-t-md transition-all duration-200 cursor-pointer ${
-                          isCurrent ? 'bg-primary shadow-[0_0_12px_rgba(99,102,241,0.6)] z-10' : 'bg-textSecondary/30 opacity-40 hover:opacity-100'
-                        }`}
-                        style={{ height: `${height}%` }}
-                        onClick={() => onSelectAlgorithm?.(name as SortingAlgorithm)}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="pt-2 sm:pt-3 border-t border-textSecondary/10 flex flex-col gap-2 grow overflow-hidden">
-              <div className="flex items-center justify-between shrink-0">
-                <h4 className="text-[9px] sm:text-[10px] font-black text-textPrimary/60 uppercase tracking-widest">Python Implementation</h4>
-                <button 
-                  onClick={handleCopy}
-                  className={`text-[8px] sm:text-[9px] font-bold px-1.5 sm:px-2 py-1 rounded transition-all ${
-                    copying ? 'bg-secondary text-white' : 'bg-primary/10 text-primary hover:bg-primary/20'
-                  }`}
-                >
-                  {copying ? 'Copied!' : 'Copy'}
-                </button>
-              </div>
-              <div className="relative group bg-background dark:bg-black/40 rounded-xl border border-primary/10 overflow-hidden shadow-inner grow flex flex-col">
-                <div className="overflow-auto scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent flex-grow p-0 pt-4 sm:pt-6">
-                  <div className="min-w-full text-[10px] sm:text-[11px] font-mono leading-relaxed py-2">
-                    {highlightPython(details.pythonCode).split('\n').map((line, i) => (
-                      <div key={i} className="flex hover:bg-primary/5">
-                        <span className="shrink-0 text-right text-textSecondary/20 select-none min-w-[2.5rem] sm:min-w-[3.5rem] pr-2 sm:pr-3 mr-2 sm:mr-3 border-r border-textSecondary/10 text-[8px] sm:text-[10px]">
-                          {i + 1}
-                        </span>
-                        <code className="block whitespace-pre pr-4" dangerouslySetInnerHTML={{ __html: line || ' ' }} />
-                      </div>
-                    ))}
+              <div className="bg-background dark:bg-black/40 rounded-xl border border-primary/10 grow overflow-auto p-2 font-mono text-[10px] sm:text-[11px] leading-relaxed">
+                {details.pythonCode.split('\n').map((line, i) => (
+                  <div key={i} className={`flex ${i === highlightedLine ? 'bg-primary/20 text-textPrimary font-black -mx-2 px-2' : ''}`}>
+                    <span className="shrink-0 text-right opacity-20 min-w-[2rem] pr-2 mr-2 border-r border-textSecondary/10">{i + 1}</span>
+                    <code dangerouslySetInnerHTML={{ __html: highlightPython(line) || ' ' }} />
                   </div>
-                </div>
+                ))}
               </div>
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-4 flex-grow overflow-hidden animate-in fade-in slide-in-from-right-2 duration-300">
-            <div className="flex flex-col gap-1 shrink-0">
-              <h3 className="font-black text-primary text-base sm:text-xl truncate">Performance Comparison</h3>
-              <p className="text-[11px] sm:text-xs text-textSecondary leading-relaxed">
-                Compare the theoretical speed and efficiency of all available algorithms.
-              </p>
-            </div>
-            
-            <div className="flex-grow overflow-auto border border-textSecondary/10 rounded-xl bg-background/50">
-              <table className="w-full text-left text-[10px] sm:text-xs">
-                <thead className="sticky top-0 bg-surface border-b border-textSecondary/10 z-10">
-                  <tr>
-                    <th className="p-2 sm:p-3 font-black text-textPrimary/50 uppercase tracking-widest">Algorithm</th>
-                    <th className="p-2 sm:p-3 font-black text-textPrimary/50 uppercase tracking-widest text-center">Avg Time</th>
-                    <th className="p-2 sm:p-3 font-black text-textPrimary/50 uppercase tracking-widest text-center">Worst Case</th>
-                    <th className="p-2 sm:p-3 font-black text-textPrimary/50 uppercase tracking-widest text-center">Space</th>
-                  </tr>
+          <div className="flex flex-col gap-4 flex-grow overflow-hidden">
+            <h3 className="font-black text-primary text-base">Big O Reference</h3>
+            <div className="overflow-auto border border-textSecondary/10 rounded-xl bg-background/50 text-[10px]">
+              <table className="w-full text-left">
+                <thead className="bg-surface border-b border-textSecondary/10">
+                  <tr><th className="p-2">Algorithm</th><th className="p-2">Avg</th><th className="p-2">Space</th></tr>
                 </thead>
                 <tbody className="divide-y divide-textSecondary/5">
                   {allAlgorithms.map(([name, data]) => (
-                    <tr 
-                      key={name} 
-                      className={`hover:bg-primary/5 transition-colors cursor-pointer group ${name === algorithm ? 'bg-primary/10' : ''}`}
-                      onClick={() => onSelectAlgorithm?.(name as SortingAlgorithm)}
-                    >
-                      <td className="p-2 sm:p-3">
-                        <div className="flex items-center gap-2">
-                          <span className={`w-1.5 h-1.5 rounded-full ${name === algorithm ? 'bg-primary' : 'bg-textSecondary/20'}`} />
-                          <span className={`font-bold ${name === algorithm ? 'text-primary' : 'text-textPrimary'}`}>{name}</span>
-                        </div>
-                      </td>
-                      <td className="p-2 sm:p-3 text-center">
-                        <span className={`px-1.5 py-0.5 rounded-md font-mono text-[9px] sm:text-[10px] border ${getComplexityColor(data.complexity)}`}>
-                          {data.complexity}
-                        </span>
-                      </td>
-                      <td className="p-2 sm:p-3 text-center">
-                        <span className={`px-1.5 py-0.5 rounded-md font-mono text-[9px] sm:text-[10px] border ${getComplexityColor(data.worstCase)}`}>
-                          {data.worstCase}
-                        </span>
-                      </td>
-                      <td className="p-2 sm:p-3 text-center">
-                        <span className="text-textSecondary font-mono">{data.spaceComplexity}</span>
-                      </td>
+                    <tr key={name} className={name === algorithm ? 'bg-primary/10' : ''}>
+                      <td className="p-2 font-bold">{name}</td>
+                      <td className="p-2">{data.complexity}</td>
+                      <td className="p-2">{data.spaceComplexity}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            
-            <div className="bg-primary/5 border border-primary/20 p-3 rounded-xl flex items-start gap-3 shrink-0">
-              <div className="p-1.5 bg-primary/20 rounded-lg text-primary shrink-0">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <p className="text-[10px] sm:text-[11px] text-textPrimary/80 leading-relaxed italic">
-                Efficiency decreases from top to bottom. Linearithmic sorts (like Merge & Quick) are generally the gold standard for large datasets.
-              </p>
-            </div>
           </div>
         )}
-
-        <div className="mt-auto pt-2 sm:pt-3 border-t border-textSecondary/10 grid grid-cols-2 gap-2 shrink-0">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-textSecondary uppercase font-bold tracking-widest text-[7px] sm:text-[8px]">Worst Case</span>
-            <code className="text-accent font-mono font-black bg-accent/10 px-1 py-0.5 rounded text-[9px] sm:text-[10px] w-fit">{details.worstCase}</code>
-          </div>
-          <div className="flex flex-col gap-0.5 items-end">
-            <span className="text-textSecondary uppercase font-bold tracking-widest text-[7px] sm:text-[8px]">Space</span>
-            <code className="text-secondary font-mono font-black bg-secondary/10 px-1 py-0.5 rounded text-[9px] sm:text-[10px] w-fit">{details.spaceComplexity}</code>
-          </div>
-        </div>
       </div>
     </>
   );

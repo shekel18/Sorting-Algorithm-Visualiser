@@ -272,8 +272,6 @@ export function getCountingSortAnimations(array: number[], isAsc: boolean = true
   for (let i = n - 1; i >= 0; i--) {
     const value = array[i];
     let position = count[value] - 1;
-    // For descending, we can logic out the positions differently or just reverse at the end
-    // But let's calculate the correct position for stable descending sort
     output[position] = value;
     count[value]--;
   }
@@ -362,7 +360,7 @@ function shuffleArray(array: number[], animations: AnimationStep[]) {
 
 export function getBogoSortAnimations(array: number[], isAsc: boolean = true): AnimationStep[] {
   const animations: AnimationStep[] = [];
-  const MAX_ATTEMPTS = 1000; // Safety break
+  const MAX_ATTEMPTS = 1000;
   let attempts = 0;
 
   while (!isArraySorted(array, isAsc) && attempts < MAX_ATTEMPTS) {
@@ -379,6 +377,43 @@ export function getBogoSortAnimations(array: number[], isAsc: boolean = true): A
     for (let i = 0; i < array.length; i++) {
       animations.push(['sorted', i]);
     }
+  }
+  return animations;
+}
+
+// --- Timsort (Simplified) ---
+export function getTimsortAnimations(array: number[], isAsc: boolean = true): AnimationStep[] {
+  const animations: AnimationStep[] = [];
+  const n = array.length;
+  const RUN = 32;
+
+  // Small runs using insertion sort
+  for (let i = 0; i < n; i += RUN) {
+    const end = Math.min(i + RUN - 1, n - 1);
+    const run = array.slice(i, end + 1);
+    const runAnims = getInsertionSortAnimations(run, isAsc);
+    // Map run animations back to the main array indices
+    runAnims.forEach(anim => {
+        const [type, arg1, arg2] = anim;
+        if (type === 'compare') animations.push(['compare', i + arg1, i + (arg2 as number)]);
+        else if (type === 'swap') animations.push(['swap', i + arg1, i + (arg2 as number)]);
+        else if (type === 'overwrite') animations.push(['overwrite', i + arg1, arg2 as number]);
+    });
+    // Update local copy
+    for (let k = i; k <= end; k++) array[k] = run[k - i];
+  }
+
+  // Merge runs
+  let size = RUN;
+  while (size < n) {
+    for (let left = 0; left < n; left += 2 * size) {
+      const mid = left + size - 1;
+      const right = Math.min(left + 2 * size - 1, n - 1);
+      if (mid < right) {
+        doMerge(array, left, mid, right, array.slice(), animations, isAsc);
+      }
+    }
+    size *= 2;
   }
   return animations;
 }

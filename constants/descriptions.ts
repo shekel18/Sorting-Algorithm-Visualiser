@@ -7,6 +7,7 @@ export interface AlgorithmDetails {
   worstCase: string;
   spaceComplexity: string;
   pythonCode: string;
+  lineMap?: Record<string, number>; // Maps internal event types to line indices
 }
 
 export const ALGORITHM_DESCRIPTIONS: Record<SortingAlgorithm, AlgorithmDetails> = {
@@ -20,7 +21,8 @@ export const ALGORITHM_DESCRIPTIONS: Record<SortingAlgorithm, AlgorithmDetails> 
     for i in range(n):
         for j in range(0, n - i - 1):
             if arr[j] > arr[j + 1]:
-                arr[j], arr[j + 1] = arr[j + 1], arr[j]`
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]`,
+    lineMap: { compare: 3, swap: 4 }
   },
   [SortingAlgorithm.SelectionSort]: {
     description: "Repeatedly finds the minimum element from the unsorted part and puts it at the beginning.",
@@ -34,7 +36,8 @@ export const ALGORITHM_DESCRIPTIONS: Record<SortingAlgorithm, AlgorithmDetails> 
         for j in range(i+1, n):
             if arr[j] < arr[min_idx]:
                 min_idx = j
-        arr[i], arr[min_idx] = arr[min_idx], arr[i]`
+        arr[i], arr[min_idx] = arr[min_idx], arr[i]`,
+    lineMap: { compare: 5, swap: 7 }
   },
   [SortingAlgorithm.InsertionSort]: {
     description: "Builds the final sorted array one item at a time by inserting each new element into its correct position.",
@@ -48,42 +51,40 @@ export const ALGORITHM_DESCRIPTIONS: Record<SortingAlgorithm, AlgorithmDetails> 
         while j >= 0 and key < arr[j]:
             arr[j + 1] = arr[j]
             j -= 1
-        arr[j + 1] = key`
+        arr[j + 1] = key`,
+    lineMap: { compare: 5, overwrite: 6 }
   },
   [SortingAlgorithm.MergeSort]: {
     description: "A divide and conquer algorithm that splits the array in half, sorts each half, and then merges them back together.",
     complexity: "O(n log n)",
     worstCase: "O(n log n)",
     spaceComplexity: "O(n)",
-    pythonCode: `def merge_sort(arr):
-    if len(arr) > 1:
-        mid = len(arr)//2
-        L, R = arr[:mid], arr[mid:]
-        merge_sort(L); merge_sort(R)
-        i = j = k = 0
-        while i < len(L) and j < len(R):
-            if L[i] < R[j]:
-                arr[k] = L[i]; i += 1
-            else:
-                arr[k] = R[j]; j += 1
-            k += 1
-        while i < len(L):
-            arr[k] = L[i]; i += 1; k += 1
-        while j < len(R):
-            arr[k] = R[j]; j += 1; k += 1`
+    pythonCode: `def merge(L, R, arr):
+    i = j = k = 0
+    while i < len(L) and j < len(R):
+        if L[i] < R[j]:      # Compare
+            arr[k] = L[i]    # Overwrite
+            i += 1
+        else:
+            arr[k] = R[j]    # Overwrite
+            j += 1
+        k += 1`,
+    lineMap: { compare: 3, overwrite: 4 }
   },
   [SortingAlgorithm.QuickSort]: {
     description: "Picks an element as a 'pivot' and partitions the array around it, such that smaller elements move to the left.",
     complexity: "O(n log n)",
     worstCase: "O(n²)",
     spaceComplexity: "O(log n)",
-    pythonCode: `def quick_sort(arr):
-    if len(arr) <= 1: return arr
-    pivot = arr[len(arr) // 2]
-    left = [x for x in arr if x < pivot]
-    middle = [x for x in arr if x == pivot]
-    right = [x for x in arr if x > pivot]
-    return quick_sort(left) + middle + quick_sort(right)`
+    pythonCode: `def partition(arr, low, high):
+    pivot = arr[high]
+    i = low - 1
+    for j in range(low, high):
+        if arr[j] < pivot:   # Compare
+            i += 1
+            arr[i], arr[j] = arr[j], arr[i] # Swap
+    arr[i+1], arr[high] = arr[high], arr[i+1] # Swap`,
+    lineMap: { compare: 4, swap: 6, pivot: 1 }
   },
   [SortingAlgorithm.HeapSort]: {
     description: "Comparison-based sorting technique based on a Binary Heap data structure, repeatedly extracting the max element.",
@@ -93,18 +94,12 @@ export const ALGORITHM_DESCRIPTIONS: Record<SortingAlgorithm, AlgorithmDetails> 
     pythonCode: `def heapify(arr, n, i):
     largest = i
     l, r = 2*i + 1, 2*i + 2
-    if l < n and arr[i] < arr[l]: largest = l
-    if r < n and arr[largest] < arr[r]: largest = r
+    if l < n and arr[l] > arr[largest]: largest = l # Compare
+    if r < n and arr[r] > arr[largest]: largest = r # Compare
     if largest != i:
-        arr[i], arr[largest] = arr[largest], arr[i]
-        heapify(arr, n, largest)
-
-def heap_sort(arr):
-    n = len(arr)
-    for i in range(n // 2 - 1, -1, -1): heapify(arr, n, i)
-    for i in range(n-1, 0, -1):
-        arr[i], arr[0] = arr[0], arr[i]
-        heapify(arr, i, 0)`
+        arr[i], arr[largest] = arr[largest], arr[i] # Swap
+        heapify(arr, n, largest)`,
+    lineMap: { compare: 3, swap: 6 }
   },
   [SortingAlgorithm.CountingSort]: {
     description: "A non-comparison sort that counts the occurrences of each unique element to determine their positions.",
@@ -112,51 +107,51 @@ def heap_sort(arr):
     worstCase: "O(n + k)",
     spaceComplexity: "O(k)",
     pythonCode: `def counting_sort(arr):
-    max_val = max(arr)
-    count = [0] * (max_val + 1)
+    count = [0] * (max(arr) + 1)
     for x in arr: count[x] += 1
     for i in range(1, len(count)): count[i] += count[i-1]
     res = [0] * len(arr)
     for x in reversed(arr):
-        res[count[x]-1] = x
-        count[x] -= 1
-    return res`
+        res[count[x]-1] = x    # Placement
+        count[x] -= 1`,
+    lineMap: { overwrite: 7 }
   },
   [SortingAlgorithm.RadixSort]: {
     description: "Sorts integers by processing individual digits, typically from least significant to most significant.",
     complexity: "O(nk)",
     worstCase: "O(nk)",
     spaceComplexity: "O(n + k)",
-    pythonCode: `def counting_sort_for_radix(arr, exp):
-    n = len(arr); output = [0] * n; count = [0] * 10
-    for i in range(n):
-        idx = arr[i] // exp
-        count[idx % 10] += 1
-    for i in range(1, 10): count[i] += count[i-1]
-    i = n - 1
-    while i >= 0:
-        idx = arr[i] // exp
-        output[count[idx % 10] - 1] = arr[i]
-        count[idx % 10] -= 1; i -= 1
-    for i in range(n): arr[i] = output[i]
-
-def radix_sort(arr):
+    pythonCode: `def radix_sort(arr):
     max_val = max(arr); exp = 1
     while max_val // exp > 0:
-        counting_sort_for_radix(arr, exp)
-        exp *= 10`
+        counting_sort_by_digit(arr, exp) # Process
+        exp *= 10`,
+    lineMap: { overwrite: 4 }
   },
   [SortingAlgorithm.BogoSort]: {
     description: "Also known as 'Stupid Sort', it simply shuffles the array randomly and checks if it's sorted. It is highly inefficient.",
     complexity: "O((n+1)!)",
     worstCase: "Infinite",
     spaceComplexity: "O(1)",
-    pythonCode: `import random
-def is_sorted(arr):
-    return all(arr[i] <= arr[i+1] for i in range(len(arr)-1))
-
-def bogo_sort(arr):
-    while not is_sorted(arr):
-        random.shuffle(arr)`
+    pythonCode: `def bogo_sort(arr):
+    while not is_sorted(arr): # Check
+        random.shuffle(arr)   # Shuffle`,
+    lineMap: { compare: 1, swap: 2 }
+  },
+  [SortingAlgorithm.Timsort]: {
+    description: "Python's default sorting algorithm. It's a stable hybrid sort derived from Merge Sort and Insertion Sort.",
+    complexity: "O(n log n)",
+    worstCase: "O(n log n)",
+    spaceComplexity: "O(n)",
+    pythonCode: `def timsort(arr):
+    n = len(arr)
+    for i in range(0, n, RUN):
+        insertion_sort(arr, i, min(i+RUN-1, n-1))
+    size = RUN
+    while size < n:
+        for left in range(0, n, 2*size):
+            merge(arr, left, mid, right) # Merge runs
+        size *= 2`,
+    lineMap: { compare: 3, overwrite: 7, swap: 3 }
   }
 };
