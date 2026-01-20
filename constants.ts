@@ -1,4 +1,3 @@
-
 import { SortingAlgorithm, ColorConfig } from './types';
 
 export const DEFAULT_ARRAY_SIZE = 50;
@@ -63,14 +62,13 @@ export const PENGUIN_ICON_URI = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0c
 
 
 export const ALGORITHMS: { value: SortingAlgorithm; label: string }[] = [
-  // Comparison Sorts
+  { value: SortingAlgorithm.Timsort, label: 'Timsort (Python Default)' },
   { value: SortingAlgorithm.MergeSort, label: 'Merge Sort' },
   { value: SortingAlgorithm.QuickSort, label: 'Quick Sort' },
   { value: SortingAlgorithm.HeapSort, label: 'Heap Sort' },
   { value: SortingAlgorithm.BubbleSort, label: 'Bubble Sort' },
   { value: SortingAlgorithm.SelectionSort, label: 'Selection Sort' },
   { value: SortingAlgorithm.InsertionSort, label: 'Insertion Sort' },
-  // Non-Comparison Sorts
   { value: SortingAlgorithm.RadixSort, label: 'Radix Sort' },
   { value: SortingAlgorithm.CountingSort, label: 'Counting Sort' },
 ];

@@ -1,4 +1,3 @@
-
 export enum SortingAlgorithm {
   BubbleSort = 'Bubble Sort',
   SelectionSort = 'Selection Sort',
@@ -9,15 +8,25 @@ export enum SortingAlgorithm {
   CountingSort = 'Counting Sort',
   RadixSort = 'Radix Sort',
   BogoSort = 'Bogo Sort',
+  Timsort = 'Timsort',
 }
 
 export type SortDirection = 'asc' | 'desc';
+
+export type ArrayDistribution = 'random' | 'nearly-sorted' | 'reversed' | 'few-unique';
 
 export interface ColorConfig {
   primary: string;
   secondary: string;
   accent: string;
   swap: string;
+}
+
+export interface SortStats {
+  comparisons: number;
+  swaps: number;
+  overwrites: number;
+  steps: number;
 }
 
 export type AnimationStep = 

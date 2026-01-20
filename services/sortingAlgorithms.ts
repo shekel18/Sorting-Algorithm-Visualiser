@@ -1,4 +1,3 @@
-
 import { AnimationStep } from '../types';
 
 // --- Bubble Sort ---
@@ -175,28 +174,7 @@ function partition(
     [array[i + 1], array[high]] = [array[high], array[i + 1]];
 
     animations.push(['sorted', i + 1]);
-
-    for (let k = low; k < i + 1; k++) {
-      if (isPartitionSorted(array, low, i, isAsc)) {
-        animations.push(['sorted', k]);
-      }
-    }
-
-    for (let k = i + 2; k <= high; k++) {
-      if (isPartitionSorted(array, i + 2, high, isAsc)) {
-         animations.push(['sorted', k]);
-      }
-    }
-
     return i + 1;
-}
-
-function isPartitionSorted(array: number[], start: number, end: number, isAsc: boolean): boolean {
-  for (let i = start; i < end; i++) {
-    const condition = isAsc ? array[i] > array[i+1] : array[i] < array[i+1];
-    if (condition) return false;
-  }
-  return true;
 }
 
 // --- Heap Sort ---
@@ -254,9 +232,7 @@ export function getCountingSortAnimations(array: number[], isAsc: boolean = true
   if (n <= 1) return animations;
 
   let max = array[0];
-  for (let i = 1; i < n; i++) {
-    if (array[i] > max) max = array[i];
-  }
+  for (let i = 1; i < n; i++) if (array[i] > max) max = array[i];
 
   const count = new Array(max + 1).fill(0);
   for (let i = 0; i < n; i++) {
@@ -264,23 +240,17 @@ export function getCountingSortAnimations(array: number[], isAsc: boolean = true
     count[array[i]]++;
   }
 
-  for (let i = 1; i <= max; i++) {
-    count[i] += count[i - 1];
-  }
+  for (let i = 1; i <= max; i++) count[i] += count[i - 1];
 
   const output = new Array(n);
   for (let i = n - 1; i >= 0; i--) {
     const value = array[i];
     let position = count[value] - 1;
-    // For descending, we can logic out the positions differently or just reverse at the end
-    // But let's calculate the correct position for stable descending sort
     output[position] = value;
     count[value]--;
   }
 
-  if (!isAsc) {
-      output.reverse();
-  }
+  if (!isAsc) output.reverse();
 
   for (let i = 0; i < n; i++) {
     animations.push(['overwrite', i, output[i]]);
@@ -325,9 +295,7 @@ function radixCountingSort(array: number[], exp: number, animations: AnimationSt
     count[digit]++;
   }
 
-  for (let i = 1; i < 10; i++) {
-    count[i] += count[i - 1];
-  }
+  for (let i = 1; i < 10; i++) count[i] += count[i - 1];
 
   for (let i = n - 1; i >= 0; i--) {
     const digit = Math.floor(array[i] / exp) % 10;
@@ -362,7 +330,7 @@ function shuffleArray(array: number[], animations: AnimationStep[]) {
 
 export function getBogoSortAnimations(array: number[], isAsc: boolean = true): AnimationStep[] {
   const animations: AnimationStep[] = [];
-  const MAX_ATTEMPTS = 1000; // Safety break
+  const MAX_ATTEMPTS = 500;
   let attempts = 0;
 
   while (!isArraySorted(array, isAsc) && attempts < MAX_ATTEMPTS) {
@@ -376,9 +344,41 @@ export function getBogoSortAnimations(array: number[], isAsc: boolean = true): A
   }
 
   if (isArraySorted(array, isAsc)) {
-    for (let i = 0; i < array.length; i++) {
-      animations.push(['sorted', i]);
-    }
+    for (let i = 0; i < array.length; i++) animations.push(['sorted', i]);
   }
+  return animations;
+}
+
+// --- Timsort (Simplified) ---
+export function getTimsortAnimations(array: number[], isAsc: boolean = true): AnimationStep[] {
+  const animations: AnimationStep[] = [];
+  const n = array.length;
+  const RUN = 32;
+
+  for (let i = 0; i < n; i += RUN) {
+    const end = Math.min(i + RUN - 1, n - 1);
+    const run = array.slice(i, end + 1);
+    const runAnims = getInsertionSortAnimations(run, isAsc);
+    runAnims.forEach(anim => {
+        const [type, arg1, arg2] = anim;
+        if (type === 'compare') animations.push(['compare', i + arg1, i + (arg2 as number)]);
+        else if (type === 'swap') animations.push(['swap', i + arg1, i + (arg2 as number)]);
+        else if (type === 'overwrite') animations.push(['overwrite', i + arg1, arg2 as number]);
+    });
+    for (let k = i; k <= end; k++) array[k] = run[k - i];
+  }
+
+  let size = RUN;
+  while (size < n) {
+    for (let left = 0; left < n; left += 2 * size) {
+      const mid = left + size - 1;
+      const right = Math.min(left + 2 * size - 1, n - 1);
+      if (mid < right) {
+        doMerge(array, left, mid, right, array.slice(), animations, isAsc);
+      }
+    }
+    size *= 2;
+  }
+  for(let i=0; i<n; i++) animations.push(['sorted', i]);
   return animations;
 }

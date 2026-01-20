@@ -6,6 +6,8 @@ import { ALGORITHM_DESCRIPTIONS } from '../constants/descriptions';
 interface AlgorithmInfoProps {
   algorithm: SortingAlgorithm;
   onClose?: () => void;
+  // Added missing prop used in App.tsx
+  highlightedLine?: number;
 }
 
 const COMPLEXITY_WEIGHTS: Record<string, number> = {
@@ -33,7 +35,7 @@ const highlightPython = (code: string) => {
   });
 };
 
-const AlgorithmInfo: React.FC<AlgorithmInfoProps> = ({ algorithm, onClose }) => {
+const AlgorithmInfo: React.FC<AlgorithmInfoProps> = ({ algorithm, onClose, highlightedLine }) => {
   const [copying, setCopying] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 340, height: 520 });
   const [isResizing, setIsResizing] = useState(false);
@@ -184,14 +186,17 @@ const AlgorithmInfo: React.FC<AlgorithmInfoProps> = ({ algorithm, onClose }) => 
           <div className="relative group bg-background dark:bg-black/40 rounded-xl border border-primary/10 overflow-hidden shadow-inner grow flex flex-col">
             <div className="overflow-auto scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent flex-grow p-0 pt-4 sm:pt-6">
               <div className="min-w-full text-[10px] sm:text-[11px] font-mono leading-relaxed py-2">
-                {highlightPython(details.pythonCode).split('\n').map((line, i) => (
-                  <div key={i} className="flex hover:bg-primary/5">
-                    <span className="shrink-0 text-right text-textSecondary/20 select-none min-w-[2.5rem] sm:min-w-[3.5rem] pr-2 sm:pr-3 mr-2 sm:mr-3 border-r border-textSecondary/10 text-[8px] sm:text-[10px]">
-                      {i + 1}
-                    </span>
-                    <code className="block whitespace-pre pr-4" dangerouslySetInnerHTML={{ __html: line || ' ' }} />
-                  </div>
-                ))}
+                {highlightPython(details.pythonCode).split('\n').map((line, i) => {
+                  const isHighlighted = (highlightedLine !== undefined && (i + 1) === highlightedLine);
+                  return (
+                    <div key={i} className={`flex transition-colors duration-200 ${isHighlighted ? 'bg-primary/20 border-l-2 border-primary' : 'hover:bg-primary/5'}`}>
+                      <span className={`shrink-0 text-right select-none min-w-[2.5rem] sm:min-w-[3.5rem] pr-2 sm:pr-3 mr-2 sm:mr-3 border-r text-[8px] sm:text-[10px] ${isHighlighted ? 'text-primary font-bold border-primary' : 'text-textSecondary/20 border-textSecondary/10'}`}>
+                        {i + 1}
+                      </span>
+                      <code className={`block whitespace-pre pr-4 ${isHighlighted ? 'text-primary font-bold' : ''}`} dangerouslySetInnerHTML={{ __html: line || ' ' }} />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
