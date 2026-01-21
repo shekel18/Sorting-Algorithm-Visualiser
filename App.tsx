@@ -130,13 +130,16 @@ const App: React.FC = () => {
     
     let newArray: number[] = [];
     if (customArray) {
-      newArray = [...customArray];
+      newArray = [...customArray].map(v => Math.floor(v));
     } else {
       const minHeight = 40;
       const maxHeight = 450;
       const range = maxHeight - minHeight;
       const step = range / size;
-      for (let i = 0; i < size; i++) newArray.push(minHeight + (i + 1) * step);
+      for (let i = 0; i < size; i++) {
+        // CRITICAL: Round to integers to prevent RangeError in Counting Sort
+        newArray.push(Math.round(minHeight + (i + 1) * step));
+      }
 
       if (distribution === 'random') {
         for (let i = newArray.length - 1; i > 0; i--) {
@@ -152,7 +155,7 @@ const App: React.FC = () => {
           [newArray[idx1], newArray[idx2]] = [newArray[idx2], newArray[idx1]];
         }
       } else if (distribution === 'few-unique') {
-        const uniqueValues = [minHeight + range * 0.2, minHeight + range * 0.5, minHeight + range * 0.8];
+        const uniqueValues = [Math.round(minHeight + range * 0.2), Math.round(minHeight + range * 0.5), Math.round(minHeight + range * 0.8)];
         newArray = newArray.map(() => uniqueValues[Math.floor(Math.random() * uniqueValues.length)]);
       }
     }
@@ -449,7 +452,6 @@ const App: React.FC = () => {
         arraySize={arraySize} onArraySizeChange={setArraySize} speed={speed} onSpeedChange={setSpeed}
         algorithm={algorithm} onAlgorithmChange={setAlgorithm} contender={contender} onContenderChange={setContender}
         sortDirection={sortDirection} onSortDirectionChange={setSortDirection}
-        // Fix: Changed from (dist) => generateArray(arraySize, dist) to a 0-argument function to match ControlPanelProps
         onGenerateArray={() => generateArray(arraySize)}
         onStartSort={handleStartSort} onPauseResume={() => setIsPaused(!isPaused)}
         onStep={handleStep} onStop={handleStop} onReset={() => { handleStop(); handleStartSort(sortingMode || 'normal'); }}

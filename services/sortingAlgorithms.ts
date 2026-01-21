@@ -1,3 +1,4 @@
+
 import { AnimationStep } from '../types';
 
 // --- Bubble Sort ---
@@ -231,20 +232,23 @@ export function getCountingSortAnimations(array: number[], isAsc: boolean = true
   const n = array.length;
   if (n <= 1) return animations;
 
-  let max = array[0];
-  for (let i = 1; i < n; i++) if (array[i] > max) max = array[i];
+  // CRITICAL: Counting sort works on non-negative integers.
+  const intArr = array.map(v => Math.floor(v));
 
-  const count = new Array(max + 1).fill(0);
+  let max = intArr[0];
+  for (let i = 1; i < n; i++) if (intArr[i] > max) max = intArr[i];
+
+  const count = new Array(Math.floor(max) + 1).fill(0);
   for (let i = 0; i < n; i++) {
     animations.push(['compare', i, i]);
-    count[array[i]]++;
+    count[intArr[i]]++;
   }
 
   for (let i = 1; i <= max; i++) count[i] += count[i - 1];
 
   const output = new Array(n);
   for (let i = n - 1; i >= 0; i--) {
-    const value = array[i];
+    const value = intArr[i];
     let position = count[value] - 1;
     output[position] = value;
     count[value]--;
@@ -266,10 +270,17 @@ export function getRadixSortAnimations(array: number[], isAsc: boolean = true): 
   const animations: AnimationStep[] = [];
   if (array.length <= 1) return animations;
 
-  const max = Math.max(...array);
+  // CRITICAL: Radix sort requires integers.
+  const intArr = array.map(v => Math.floor(v));
+  const max = Math.max(...intArr);
 
   for (let exp = 1; Math.floor(max / exp) > 0; exp *= 10) {
-    radixCountingSort(array, exp, animations);
+    radixCountingSort(intArr, exp, animations);
+  }
+
+  // Update original array with sorted integers
+  for (let i = 0; i < array.length; i++) {
+      array[i] = intArr[i];
   }
 
   if (!isAsc) {

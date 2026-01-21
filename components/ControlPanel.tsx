@@ -38,6 +38,9 @@ interface ControlPanelProps {
   onSpeedChange: (value: number) => void;
   algorithm: SortingAlgorithm;
   onAlgorithmChange: (value: SortingAlgorithm) => void;
+  // Fix: Added missing contender props
+  contender: SortingAlgorithm | null;
+  onContenderChange: (value: SortingAlgorithm | null) => void;
   sortDirection: SortDirection;
   onSortDirectionChange: (value: SortDirection) => void;
   onGenerateArray: () => void;
@@ -58,6 +61,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   onSpeedChange,
   algorithm,
   onAlgorithmChange,
+  // Fix: Destructure contender and onContenderChange
+  contender,
+  onContenderChange,
   sortDirection,
   onSortDirectionChange,
   onGenerateArray,
@@ -102,7 +108,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         </div>
 
         {/* Configurations Area */}
-        <div className={`${isExpanded ? 'grid' : 'hidden md:grid'} grid-cols-2 md:grid-cols-5 gap-4 items-end animate-in fade-in slide-in-from-top-2 duration-300`}>
+        <div className={`${isExpanded ? 'grid' : 'hidden md:grid'} grid-cols-2 md:grid-cols-6 gap-4 items-end animate-in fade-in slide-in-from-top-2 duration-300`}>
           <div className="hidden md:flex flex-col gap-2">
             <button
               onClick={onGenerateArray}
@@ -133,6 +139,23 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
               {showBogoSort && (
                 <option value={BOGO_SORT_ALGORITHM.value}>{BOGO_SORT_ALGORITHM.label} 🐧</option>
               )}
+            </select>
+          </div>
+
+          {/* Fix: Added UI for selecting a contender algorithm for duel mode */}
+          <div className="flex flex-col text-xs sm:text-sm">
+            <label htmlFor="contender" className="mb-1 text-textSecondary font-semibold">Duel Mode</label>
+            <select
+              id="contender"
+              value={contender || ''}
+              onChange={(e) => onContenderChange(e.target.value ? e.target.value as SortingAlgorithm : null)}
+              disabled={isSorting}
+              className="bg-background border border-textSecondary/30 rounded-md h-10 sm:h-11 px-2 focus:ring-2 focus:ring-accent focus:border-accent text-textPrimary disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-sm"
+            >
+              <option value="">None (Solo)</option>
+              {ALGORITHMS.map((alg) => (
+                <option key={alg.value} value={alg.value}>{alg.label}</option>
+              ))}
             </select>
           </div>
 
