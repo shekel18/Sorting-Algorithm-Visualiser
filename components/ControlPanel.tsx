@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { SortingAlgorithm, SortDirection } from '../types';
 import { ALGORITHMS, BOGO_SORT_ALGORITHM, MIN_ARRAY_SIZE, MAX_ARRAY_SIZE, MIN_SPEED, MAX_SPEED } from '../constants';
@@ -27,6 +28,14 @@ const StopIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" /></svg>
 );
 
+// Fix: Add a StepForwardIcon for the new 'Step' button.
+const StepForwardIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 4.5v15" />
+  </svg>
+);
+
 const ShortcutHint = ({ children }: { children?: React.ReactNode }) => (
   <span className="hidden lg:inline text-[10px] opacity-60 font-mono ml-1 px-1 rounded bg-black/10">[{children}]</span>
 );
@@ -46,6 +55,8 @@ interface ControlPanelProps {
   onGenerateArray: () => void;
   onStartSort: (mode: 'normal' | 'turbo') => void;
   onPauseResume: () => void;
+  // Fix: Add onStep prop to allow stepping through the animation.
+  onStep: () => void;
   onStop: () => void;
   onReset: () => void;
   sortingMode: 'normal' | 'turbo' | null;
@@ -71,6 +82,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   onPauseResume,
   onStop,
   onReset,
+  // Fix: Destructure onStep prop.
+  onStep,
   sortingMode,
   isPaused,
   isSorted,
@@ -238,6 +251,18 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 <span className="hidden sm:inline">{isPaused ? 'Resume' : 'Pause'} <ShortcutHint>Space</ShortcutHint></span>
                 <span className="sm:hidden">{isPaused ? 'Resume' : 'Pause'}</span>
               </button>
+
+              {/* Fix: Add a 'Step' button, visible only when paused. */}
+              {isPaused && (
+                <button
+                  onClick={onStep}
+                  className={`${buttonBaseClasses} flex-1 sm:flex-none sm:min-w-[110px] h-10 sm:h-11 bg-teal-500 text-white shadow-md active:scale-95`}
+                >
+                  <StepForwardIcon />
+                  <span className="hidden sm:inline">Step <ShortcutHint>&#8594;</ShortcutHint></span>
+                  <span className="sm:hidden">Step</span>
+                </button>
+              )}
 
               <button
                 onClick={onReset}

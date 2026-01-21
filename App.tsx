@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Header from './components/Header';
 import ControlPanel from './components/ControlPanel';
@@ -436,10 +437,12 @@ const App: React.FC = () => {
       else if (e.key === ' ') { e.preventDefault(); if (sortingMode) setIsPaused(p => !p); }
       else if (e.key === 'Escape') { if (sortingMode) handleStop(); }
       else if (e.key === 't' || e.key === 'T') { if (!sortingMode) handleStartSort('turbo'); }
+      // Fix: Add keyboard shortcut for stepping through the animation and add dependencies to useEffect.
+      else if (e.key === 'ArrowRight') { e.preventDefault(); handleStep(); }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [sortingMode, handleStartSort, handleStop]);
+  }, [sortingMode, handleStartSort, handleStop, handleStep]);
 
   return (
     <div className="min-h-screen flex flex-col overflow-x-hidden">
